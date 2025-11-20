@@ -4,7 +4,7 @@ import plotly.express as px
 
 st.set_page_config(page_title="Zero",
                    page_icon="⭕️",
-                   layout="centerted")
+                   layout="centered")
 
 st.title("Zero.")
 st.header("Welcome to yput fresh start.")
