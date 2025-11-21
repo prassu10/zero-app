@@ -9,10 +9,15 @@ import random
 # --- 1. CONFIGURATION & MOBILE STYLING ---
 st.set_page_config(page_title="Zero", page_icon="⭕", layout="centered")
 
-# This CSS makes the app look like a native iOS app
+# This CSS makes the app look like a native iOS app AND hides the header
 st.markdown("""
     <style>
     .stApp { background-color: #000000; color: white; }
+    
+    /* HIDE STREAMLIT HEADER & FOOTER */
+    header {visibility: hidden;}
+    .stApp > footer {display: none;}
+    
     /* Big, thumb-friendly buttons */
     .stButton button {
         width: 100%;
@@ -21,13 +26,14 @@ st.markdown("""
         font-size: 18px;
         font-weight: 600;
     }
+    
     /* Hide top padding so it fits iPhone screen better */
-    div.block-container { padding-top: 1.5rem; padding-bottom: 3rem; }
+    div.block-container { padding-top: 0.5rem; padding-bottom: 3rem; }
+    
     /* Make metrics large and readable */
     [data-testid="stMetricValue"] { font-size: 2.2rem !important; }
     </style>
 """, unsafe_allow_html=True)
-
 # --- 2. DATABASE FUNCTIONS ---
 conn = st.connection("gsheets", type=GSheetsConnection)
 
