@@ -6,39 +6,63 @@ from datetime import datetime
 import time
 import random
 
-# --- 1. CONFIGURATION & MOBILE STYLING ---
+# --- 1. CONFIGURATION & UI POLISH ---
 st.set_page_config(page_title="Zero", page_icon="⭕", layout="centered")
 
-# This CSS makes the app look like a native iOS app AND hides the header
+# Advanced CSS for the "Premium App" feel
 st.markdown("""
     <style>
-    .stApp { background-color: #000000; color: white; }
+    /* 1. Main Background & Text */
+    .stApp { 
+        background-color: #000000; 
+        color: #ffffff; 
+    }
     
-    /* HIDE STREAMLIT HEADER & FOOTER */
+    /* 2. Hide Streamlit default elements */
     header {visibility: hidden;}
     .stApp > footer {display: none;}
     
-    /* Big, thumb-friendly buttons */
+    /* 3. Button Styling - Gradient & Roundness */
     .stButton button {
         width: 100%;
-        height: 3.5rem;
+        height: 3.2rem;
         border-radius: 12px;
-        font-size: 18px;
         font-weight: 600;
+        background-color: #1e1e1e;
+        color: white;
+        border: 1px solid #333;
+        transition: all 0.2s;
+    }
+    .stButton button:hover {
+        border-color: #00FF94; /* Neon Green Hover */
+        color: #00FF94;
     }
     
-    /* Hide top padding so it fits iPhone screen better */
-    div.block-container { padding-top: 0.5rem; padding-bottom: 3rem; }
+    /* 4. Metric Styling */
+    [data-testid="stMetricValue"] { 
+        font-size: 2.5rem !important; 
+        font-family: 'Helvetica Neue', sans-serif;
+        color: #00FF94; /* Neon Green for numbers */
+    }
+    [data-testid="stMetricLabel"] {
+        color: #888;
+        font-size: 0.9rem;
+    }
     
-    /* Make metrics large and readable */
-    [data-testid="stMetricValue"] { font-size: 2.2rem !important; }
+    /* 5. Spacing adjustments for mobile */
+    div.block-container { padding-top: 1rem; padding-bottom: 4rem; }
+    
+    /* 6. Remove white background from charts if any */
+    .js-plotly-plot .plotly .main-svg {
+        background: rgba(0,0,0,0) !important;
+    }
     </style>
 """, unsafe_allow_html=True)
+
 # --- 2. DATABASE FUNCTIONS ---
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 def get_data(worksheet_name):
-    # ttl=0 ensures we don't use old cached data
     try:
         return conn.read(worksheet=worksheet_name, ttl=0)
     except:
@@ -47,7 +71,6 @@ def get_data(worksheet_name):
 def write_log(intensity, trigger, action, resisted, location):
     try:
         df = get_data("Logs")
-        # Create the new row
         new_entry = pd.DataFrame([{
             "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "Intensity": intensity,
@@ -56,10 +79,9 @@ def write_log(intensity, trigger, action, resisted, location):
             "Resisted": resisted,
             "Location": location
         }])
-        # Combine with old data
         updated_df = pd.concat([df, new_entry], ignore_index=True)
         conn.update(worksheet="Logs", data=updated_df)
-        st.cache_data.clear() # Force the app to reload data
+        st.cache_data.clear()
         return True
     except Exception as e:
         st.error(f"Save Error: {e}")
@@ -67,7 +89,6 @@ def write_log(intensity, trigger, action, resisted, location):
 
 def update_settings(quit_date, cost, cigs):
     try:
-        # Create a simple table for settings
         new_settings = pd.DataFrame([
             {"Key": "quit_date", "Value": str(quit_date)},
             {"Key": "cost_per_pack", "Value": str(cost)},
@@ -82,7 +103,6 @@ def update_settings(quit_date, cost, cigs):
 
 # --- 3. CALCULATIONS ---
 def get_progress(settings_dict):
-    # Default values if settings are empty
     q_date = settings_dict.get('quit_date', '2024-01-01')
     cost = float(settings_dict.get('cost_per_pack', 12.0))
     daily = float(settings_dict.get('cigs_per_day', 15.0))
@@ -101,7 +121,7 @@ def get_progress(settings_dict):
 
 # --- 4. APP INTERFACE ---
 
-# Load Settings First
+# Load Settings
 df_set = get_data("Settings")
 if not df_set.empty:
     my_settings = dict(zip(df_set['Key'], df_set['Value']))
@@ -110,104 +130,138 @@ else:
 
 days, money, avoided, hours, q_date_obj, s_cost, s_daily = get_progress(my_settings)
 
-# Navigation Tabs
-tab1, tab2, tab3, tab4 = st.tabs(["🏠 Zero", "🛡️ Fight", "📊 Stats", "⚙️ Setup"])
+# CLEANER TABS
+tab1, tab2, tab3, tab4 = st.tabs([" 🔥 ZERO ", " 🛡️ FIGHT ", " 📈 DATA ", " ⚙️ SET "])
 
 # === TAB 1: DASHBOARD ===
 with tab1:
+    st.caption("CURRENT STREAK")
     st.title("Zero.")
     
-    # Main Stats
-    c1, c2 = st.columns(2)
-    c1.metric("Days Free", f"{days}")
-    c2.metric("Saved", f"${money:,.0f}")
-    st.metric("Cigarettes Avoided", f"{int(avoided)} 💀")
+    # Card-like layout using containers
+    with st.container(border=True):
+        c1, c2 = st.columns(2)
+        c1.metric("Days Free", f"{days}")
+        c2.metric("Saved", f"${money:,.0f}")
+        
+    with st.container(border=True):
+        col_a, col_b = st.columns([3, 1])
+        col_a.metric("Cigarettes Avoided", f"{int(avoided)}")
+        col_b.markdown("# 💀") # Big icon
 
     st.divider()
     
     # Health Logic
-    st.subheader("❤️ Healing Process")
+    st.subheader("🧬 Biological Status")
+    
     if hours < 24:
         prog = hours / 24
-        stage = "Carbon Monoxide flushing out"
+        stage = "CO Flushing Out"
+        icon = "🩸"
     elif hours < 72:
         prog = (hours - 24) / 48
-        stage = "Nicotine leaving body"
-    elif hours < 336: # 2 weeks
+        stage = "Nicotine Leaving Body"
+        icon = "🧠"
+    elif hours < 336: 
         prog = (hours - 72) / (336 - 72)
-        stage = "Lung function improving"
+        stage = "Lung Function +10%"
+        icon = "🫁"
     else:
         prog = 1.0
-        stage = "Long-term recovery"
+        stage = "Long-term Recovery"
+        icon = "❤️"
         
-    st.write(f"**Stage:** {stage}")
+    st.write(f"**{icon} {stage}**")
     st.progress(min(prog, 1.0))
 
 # === TAB 2: THE FIGHT ===
 with tab2:
-    st.header("Combat Urges")
+    st.header("Combat Zone")
     
-    # PANIC BUTTON
-    if st.toggle("🚨 Emergency Mode"):
-        st.warning("STOP. Don't do it.")
-        
-        task = random.choice(["Drink water", "10 Pushups", "Deep Breaths", "Walk Outside"])
-        st.info(f"**Your Mission:** {task}")
-        
-        if st.button("Start 3-Min Timer"):
-            bar = st.progress(0, text="Breathe in...")
-            for i in range(100):
-                time.sleep(0.05) # Fast for demo (Change to 1.8 for real time)
-                bar.progress(i+1)
-            st.balloons()
-            st.success("You won this round.")
+    # RED EMERGENCY CONTAINER
+    with st.container(border=True):
+        st.markdown("### 🚨 Panic Button")
+        if st.toggle("I need help right now"):
+            st.warning("STOP. Do not smoke.")
+            
+            task = random.choice([
+                "💧 Chug a glass of ice water", 
+                "🏃‍♂️ Do 10 Pushups NOW", 
+                "🌬️ Box Breathe (4s in, 4s hold, 4s out)", 
+                "🚶 Walk around the block"
+            ])
+            st.info(f"**MISSION:** {task}")
+            
+            if st.button("Start 3-Min Focus Timer"):
+                bar = st.progress(0, text="Stay strong...")
+                for i in range(100):
+                    time.sleep(0.05) 
+                    bar.progress(i+1)
+                st.balloons()
+                st.success("Urge defeated.")
 
-    st.divider()
+    st.write("") # Spacer
     
-    # LOGGING FORM
-    with st.form("craving_log"):
-        st.write("Log to track your triggers.")
-        intensity = st.slider("Intensity", 1, 10, 5)
-        trigger = st.selectbox("Trigger", ["Stress", "Boredom", "Meal", "Social", "Alcohol", "Waking Up"])
-        action = st.text_input("What did you do?", "Resisted")
-        resisted = st.checkbox("I Resisted ✅", value=True)
-        location = st.selectbox("Location", ["Home", "Work", "Outside", "Car/Transit"])
-        
-        if st.form_submit_button("Save Log"):
-            res_str = "TRUE" if resisted else "FALSE"
-            if write_log(intensity, trigger, action, res_str, location):
-                st.success("Saved!")
-                time.sleep(1)
-                st.rerun()
+    # LOGGING FORM CONTAINER
+    with st.container(border=True):
+        st.markdown("### 📝 Log a Craving")
+        with st.form("craving_log"):
+            intensity = st.slider("Urge Intensity", 1, 10, 5)
+            
+            c1, c2 = st.columns(2)
+            trigger = c1.selectbox("Trigger", ["Stress", "Boredom", "Meal", "Social", "Alcohol", "Waking Up"])
+            location = c2.selectbox("Location", ["Home", "Work", "Outside", "Car/Transit"])
+            
+            action = st.text_input("Alternative Action", placeholder="e.g. Drank Water")
+            resisted = st.checkbox("I Resisted ✅", value=True)
+            
+            if st.form_submit_button("Save Entry"):
+                res_str = "TRUE" if resisted else "FALSE"
+                if write_log(intensity, trigger, action, res_str, location):
+                    st.toast("Entry Saved!", icon="💾")
+                    time.sleep(1)
+                    st.rerun()
 
 # === TAB 3: STATS ===
 with tab3:
-    st.header("Your Data")
+    st.header("Analytics")
     logs = get_data("Logs")
     
     if not logs.empty and "Trigger" in logs.columns:
-        # Chart 1: Triggers
-        counts = logs["Trigger"].value_counts().reset_index()
-        counts.columns = ["Trigger", "Count"]
-        fig = px.bar(counts, x="Trigger", y="Count", color="Trigger")
-        st.plotly_chart(fig, use_container_width=True)
         
-        # Recent History
-        st.write("Recent Logs:")
-        st.dataframe(logs.tail(3), use_container_width=True)
+        with st.container(border=True):
+            st.caption("WHAT TRIGGERS YOU?")
+            counts = logs["Trigger"].value_counts().reset_index()
+            counts.columns = ["Trigger", "Count"]
+            
+            # Dark Mode Chart
+            fig = px.bar(counts, x="Trigger", y="Count", color="Trigger")
+            fig.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font_color="white",
+                showlegend=False
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with st.container(border=True):
+            st.caption("RECENT LOGS")
+            st.dataframe(logs.tail(3)[['Timestamp', 'Trigger', 'Resisted']], use_container_width=True, hide_index=True)
+            
     else:
-        st.info("Log your first craving in the 'Fight' tab to see charts here.")
+        st.info("Log your first craving to unlock charts.")
 
 # === TAB 4: SETUP ===
 with tab4:
-    st.header("Settings")
-    with st.form("setup_form"):
-        d_date = st.text_input("Quit Date (YYYY-MM-DD)", str(q_date_obj.date()))
-        d_cost = st.number_input("Cost per Pack ($)", value=s_cost)
-        d_cigs = st.number_input("Cigs per Day", value=s_daily)
-        
-        if st.form_submit_button("Save Settings"):
-            if update_settings(d_date, d_cost, d_cigs):
-                st.success("Updated! Refreshing...")
-                time.sleep(1)
-                st.rerun()
+    st.header("Calibration")
+    with st.container(border=True):
+        with st.form("setup_form"):
+            d_date = st.text_input("Quit Date (YYYY-MM-DD)", str(q_date_obj.date()))
+            d_cost = st.number_input("Cost per Pack ($)", value=s_cost)
+            d_cigs = st.number_input("Cigs per Day", value=s_daily)
+            
+            if st.form_submit_button("Update Baseline"):
+                if update_settings(d_date, d_cost, d_cigs):
+                    st.toast("Settings Updated", icon="✅")
+                    time.sleep(1)
+                    st.rerun()
