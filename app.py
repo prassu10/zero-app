@@ -6,47 +6,82 @@ from datetime import datetime
 import time
 import random
 
-# --- 1. CONFIG & DARK MODE MAGIC ---
+# --- 1. CONFIG & "MIDNIGHT AURORA" THEME ---
 st.set_page_config(page_title="Zero", page_icon="⭕", layout="centered")
 
 st.markdown("""
     <style>
-    /* DEEP BLACK MODE */
-    .stApp { background-color: #000000; color: #e0e0e0; }
+    /* 1. TRUE OLED BLACK BACKGROUND */
+    .stApp { 
+        background-color: #000000; 
+        color: #F0F2F6;
+    }
     
-    /* HIDE STREAMLIT UI CLUTTER */
+    /* 2. HIDE UI CLUTTER */
     header {visibility: hidden;}
     .stApp > footer {display: none;}
-    [data-testid="stToolbar"] {visibility: hidden;} /* Hides top right menu */
+    [data-testid="stToolbar"] {visibility: hidden;}
     
-    /* MOBILE OPTIMIZATION */
-    div.block-container { padding-top: 1rem; padding-bottom: 5rem; }
+    /* 3. MOBILE PADDING */
+    div.block-container { padding-top: 1rem; padding-bottom: 6rem; }
     
-    /* PREMIUM BUTTONS */
+    /* 4. PREMIUM CARDS (Glassmorphism effect) */
+    [data-testid="stVerticalBlockBorderWrapper"] > div {
+        background-color: #0E1117;
+        border: 1px solid #1f2937;
+        border-radius: 16px;
+        padding: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    }
+    
+    /* 5. BUTTONS: GRADIENTS */
     .stButton button {
         width: 100%;
         height: 3.5rem;
-        border-radius: 16px; /* Softer corners */
+        border-radius: 12px;
         font-weight: 700;
-        background: linear-gradient(45deg, #1a1a1a, #2a2a2a);
-        border: 1px solid #333;
+        border: none;
         color: white;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        transition: transform 0.1s;
+        background: linear-gradient(90deg, #2b5876 0%, #4e4376 100%); /* Deep Ocean Gradient */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        transition: transform 0.1s ease-in-out;
     }
-    .stButton button:active { transform: scale(0.98); } /* Click effect */
+    .stButton button:active { transform: scale(0.97); }
     
-    /* NEON ACCENTS */
+    /* Special styling for specific buttons via key/label targeting implies logic in python, 
+       but here we set a global premium feel */
+
+    /* 6. METRICS: AURORA GRADIENT TEXT */
     [data-testid="stMetricValue"] { 
         font-size: 2.8rem !important; 
-        font-family: 'Helvetica Neue', sans-serif;
-        background: -webkit-linear-gradient(#00FF94, #00CC7A);
+        font-weight: 800;
+        background: -webkit-linear-gradient(0deg, #00d2ff, #3a7bd5);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        font-family: 'Inter', sans-serif;
+    }
+    [data-testid="stMetricLabel"] { 
+        color: #94a3b8; 
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
     
-    /* PILLS (SELECTION BUTTONS) STYLING */
+    /* 7. PILLS / TABS */
     [data-testid="stStSelectbox"] { border-radius: 12px; }
+    .stTabs [data-baseweb="tab-list"] { gap: 8px; }
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        white-space: pre-wrap;
+        background-color: #0E1117;
+        border-radius: 10px;
+        color: #64748b;
+        font-size: 14px;
+    }
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        background-color: #1e293b;
+        color: #38bdf8; /* Sky blue active tab */
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -100,19 +135,20 @@ def get_progress(settings_dict):
     return days, money, avoided, hours, quit_dt, cost, daily
 
 def get_level(days):
-    if days < 1: return "🌱 The Seed", 0.0
-    if days < 3: return "🛡️ The Survivor", 0.1
-    if days < 7: return "⚔️ The Warrior", 0.25
-    if days < 14: return "🦅 The Falcon", 0.50
-    if days < 30: return "🔥 The Phoenix", 0.75
-    return "👑 The Legend", 1.0
+    # Using Emojis and Colors to denote rank
+    if days < 1: return "🌱 Sprout", 0.0
+    if days < 3: return "💧 Drop", 0.1
+    if days < 7: return "🌊 Stream", 0.25
+    if days < 14: return "⚔️ River", 0.50
+    if days < 30: return "🏔️ Mountain", 0.75
+    return "💎 Diamond", 1.0
 
 def get_quote():
     quotes = [
-        "The urge is temporary. The pride is forever.",
-        "Not another puff, no matter what.",
-        "You are not giving up something. You are getting free.",
-        "Pain is weakness leaving the body."
+        "Discipline is freedom.",
+        "The only way out is through.",
+        "Don't trade what you want most for what you want now.",
+        "Clear lungs, clear mind."
     ]
     return random.choice(quotes)
 
@@ -125,18 +161,25 @@ days, money, avoided, hours, q_date_obj, s_cost, s_daily = get_progress(my_setti
 level_name, level_progress = get_level(days)
 
 # TABS
-tab1, tab2, tab3, tab4 = st.tabs(["⭕ ZERO", "🛡️ FIGHT", "📈 JOURNEY", "⚙️ CALIB"])
+# We use spaces to make tabs wider and easier to tap
+tab1, tab2, tab3, tab4 = st.tabs(["  🏠 ZERO  ", "  🛡️ FIGHT  ", "  📊 DATA  ", "  ⚙️ SET  "])
 
-# === TAB 1: DASHBOARD ===
+# === TAB 1: DASHBOARD (The Calm) ===
 with tab1:
-    # LEVEL HEADER
-    st.caption(f"CURRENT RANK: {level_name.upper()}")
-    st.progress(level_progress)
+    # HEADER
+    c_rank, c_prog = st.columns([2, 3])
+    with c_rank:
+        st.caption("CURRENT RANK")
+        st.markdown(f"**{level_name}**")
+    with c_prog:
+        st.caption("NEXT LEVEL")
+        st.progress(level_progress)
     
     st.title("Zero.")
-    st.markdown(f"_{get_quote()}_")
-    
-    # MAIN STATS (Grid Layout)
+    st.markdown(f"*{get_quote()}*")
+    st.write("") # Spacer
+
+    # METRIC CARDS
     with st.container(border=True):
         c1, c2 = st.columns(2)
         c1.metric("Days Free", f"{days}")
@@ -144,118 +187,128 @@ with tab1:
     
     with st.container(border=True):
         c3, c4 = st.columns([3,1])
-        c3.metric("Avoided", f"{int(avoided)}")
-        c4.markdown("## 🚬")
+        c3.metric("Cigs Avoided", f"{int(avoided)}")
+        c4.markdown("# 💀")
 
-    # HEALTH TIMELINE
     st.divider()
-    st.subheader("Health Recovery")
+    st.subheader("🧬 Biological Timeline")
     
-    # Visual Timeline Logic
+    # Timeline Logic with Icons
     stages = [
-        (24, "CO Cleared", "🩸"),
-        (72, "Nicotine Free", "🧠"),
-        (336, "Lung Repair", "🫁"),
-        (2160, "Cilia Regrowth", "🌿")
+        (24, "Carbon Monoxide cleared", "🩸"),
+        (72, "Nicotine removed", "🧠"),
+        (336, "Circulation improving", "❤️"),
+        (2160, "Lung capacity +10%", "🫁")
     ]
     
+    found_stage = False
     for h, label, icon in stages:
         if hours < h:
-            # Current Stage
             pct = max(0.0, min(1.0, hours / h))
-            st.write(f"**Current Mission:** {label}")
+            st.info(f"**Current Phase:** {label}")
             st.progress(pct)
-            st.caption(f"{int(hours)} / {h} Hours")
+            st.caption(f"{int(hours)} / {h} Hours completed")
+            found_stage = True
             break
-    else:
-        st.success("🏆 You have cleared the hardest biological hurdles!")
+    if not found_stage:
+        st.success("💎 You are in the advanced healing phase!")
 
-# === TAB 2: THE FIGHT (User Friendly Upgrade) ===
+# === TAB 2: FIGHT (The Fire) ===
 with tab2:
-    st.header("Manage Urges")
+    st.header("Emergency Room")
     
-    # PANIC BUTTON (Big & Red)
-    with st.container(border=True):
-        st.markdown("### 🚨 SOS")
-        if st.button("I AM STRUGGLING", type="primary"):
-            with st.status("Initiating Calming Sequence...", expanded=True):
-                st.write("1. Drop your shoulders.")
-                time.sleep(1)
-                st.write("2. Unclench your jaw.")
-                time.sleep(1)
-                st.write("3. Take a deep breath...")
-                bar = st.progress(0)
-                for i in range(100):
-                    time.sleep(0.03)
-                    bar.progress(i+1)
-            st.balloons()
-            st.success("The wave has passed. Good job.")
+    # PANIC BUTTON - Uses a different CSS class implicitly via 'type=primary'
+    # We use a container to frame it in Red
+    st.error("Craving Intensity: High? Tap below.")
+    
+    if st.button("🆘 ACTIVATE RESCUE MODE", type="primary"):
+        with st.status("⚡ Hack your biology...", expanded=True):
+            st.markdown("**Step 1:** 🧊 Drink cold water (Shock the system)")
+            time.sleep(1)
+            st.markdown("**Step 2:** 🌬️ Exhale fully (Empty the lungs)")
+            time.sleep(1)
+            st.markdown("**Step 3:** ⏳ Wait out the timer...")
+            
+            bar = st.progress(0)
+            for i in range(100):
+                time.sleep(0.03)
+                bar.progress(i+1)
+        st.balloons()
+        st.success("Dopamine hit provided. You are safe.")
 
-    st.write("") # Gap
+    st.write("---")
     
-    # QUICK LOG (Using Pills for Speed)
+    # LOGGING (Clean & Fast)
     with st.container(border=True):
-        st.markdown("### ⚡ Quick Log")
-        
+        st.subheader("📝 Fast Log")
         with st.form("fast_log"):
-            # Pills are faster than dropdowns
-            st.caption("How strong is it?")
-            intensity = st.slider("Intensity", 1, 10, 5, label_visibility="collapsed")
+            st.caption("Intensity Level")
+            intensity = st.slider("Select", 1, 10, 5, label_visibility="collapsed")
             
-            st.caption("What triggered it?")
-            # NEW FEATURE: Pills
-            trigger = st.pills("", ["Stress", "Boredom", "Meal", "Coffee", "Alcohol", "Social"], selection_mode="single")
+            st.caption("Trigger")
+            # Using Pills for colorful, easy selection
+            trigger = st.pills("Source", ["Stress", "Boredom", "Meal", "Coffee", "Alcohol", "Social"], selection_mode="single")
             
-            st.caption("Where are you?")
-            location = st.pills("", ["Home", "Work", "Car", "Outside"], selection_mode="single")
+            st.caption("Location")
+            location = st.pills("Place", ["Home", "Work", "Car", "Outside"], selection_mode="single")
             
-            # Default values if user ignores pills
-            final_trig = trigger if trigger else "Other"
-            final_loc = location if location else "Other"
+            # Safe defaults
+            trig_val = trigger if trigger else "Unknown"
+            loc_val = location if location else "Unknown"
             
-            if st.form_submit_button("LOG & CRUSH IT 👊"):
-                write_log(intensity, final_trig, "Fast Log", "TRUE", final_loc)
-                st.toast("Logged! Streak maintained.", icon="✅")
-                time.sleep(1)
+            submit = st.form_submit_button("LOG & WIN")
+            
+            if submit:
+                write_log(intensity, trig_val, "Logged", "TRUE", loc_val)
+                st.toast("Victory Logged.", icon="🛡️")
+                time.sleep(0.5)
                 st.rerun()
 
-# === TAB 3: JOURNEY ===
+# === TAB 3: DATA (The Logic) ===
 with tab3:
-    st.header("Your Data")
+    st.header("Patterns")
     logs = get_data("Logs")
     
     if not logs.empty and "Trigger" in logs.columns:
         with st.container(border=True):
-            st.caption("ENEMY IDENTIFICATION (Top Triggers)")
+            st.caption("YOUR TOP TRIGGERS")
             counts = logs["Trigger"].value_counts().reset_index()
             counts.columns = ["Trigger", "Count"]
             
+            # Aesthetic Chart
             fig = px.bar(counts, x="Count", y="Trigger", orientation='h', text_auto=True)
+            
+            # Custom Color Palette for the Chart (Teal/Blue)
+            fig.update_traces(marker_color='#38bdf8', marker_line_color='#0ea5e9', marker_line_width=1.5, opacity=0.8)
+            
             fig.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font_color="white",
+                font_color="#94a3b8",
                 xaxis=dict(showgrid=False),
                 yaxis=dict(showgrid=False)
             )
-            fig.update_traces(marker_color='#00FF94')
             st.plotly_chart(fig, use_container_width=True)
     else:
-        st.info("Data visualization activates after your first log.")
+        st.info("Start logging to see your data come to life.")
 
-# === TAB 4: CALIBRATION ===
+# === TAB 4: SETTINGS ===
 with tab4:
-    st.header("Settings")
+    st.header("Configuration")
     
     with st.container(border=True):
         with st.form("settings"):
-            st.caption("My Freedom Date")
-            d_date = st.text_input("YYYY-MM-DD", str(q_date_obj.date()))
+            st.caption("Quit Date (YYYY-MM-DD)")
+            d_date = st.text_input("Date", str(q_date_obj.date()), label_visibility="collapsed")
             
             c1, c2 = st.columns(2)
-            d_cost = c1.number_input("$/Pack", value=s_cost)
-            d_cigs = c2.number_input("Cigs/Day", value=s_daily)
+            with c1:
+                st.caption("Cost/Pack")
+                d_cost = st.number_input("Cost", value=s_cost, label_visibility="collapsed")
+            with c2:
+                st.caption("Cigs/Day")
+                d_cigs = st.number_input("Count", value=s_daily, label_visibility="collapsed")
             
-            if st.form_submit_button("Update"):
+            if st.form_submit_button("Update Profile"):
                 update_settings(d_date, d_cost, d_cigs)
                 st.rerun()
